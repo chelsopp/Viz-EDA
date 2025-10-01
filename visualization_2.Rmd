@@ -95,5 +95,65 @@ weather_df %>%
 ```
 
 
+## Themes
 
+make my base plot.
+```{r}
+ggplot_temp = 
+  weather_df %>% 
+  ggplot(aes(x = tmin, y=tmax)) +
+  geom_point(aes(color = name), alpha = 0.5) +
+  labs(
+    x = "Minimum daily temp",
+    y = "Maximum daily temp",
+    title = "Temp scatterplot",
+    caption = "Data from NOAA",
+    color = "Location"
+  ) +
+  scale_x_continuous(
+    breaks = c(-20, 0, 25),
+    labels = c("-20C", "0", "25")
+  ) +
+  viridis::scale_color_viridis(
+    discrete = TRUE
+  )
+```
+
+update my base plot
+note: order of code matters here
+```{r}
+ggplot_temp +
+  theme_dark() +
+  theme(legend.position = "bottom") 
+
+ggplot_temp +
+  theme_minimal() +
+  theme(legend.position = "bottom") 
+
+ggplot_temp +
+  theme_bw() +
+  theme(legend.position = "bottom") 
+```
+
+```{r}
+ggsave("weather_scatterplot.png", ggplot_temp)
+```
+
+
+## Adding data in geoms
+
+overlapping two different data sets
+```{r}
+central_park_df = 
+  weather_df %>% 
+  filter(name == "CentralPark_NY")
+
+molokai_df =
+ weather_df %>% 
+  filter(name == "Molokai_HI")
+
+ggplot(data = molokai_df, aes(x = date, y = tmax, color = name)) +
+  geom_point() +
+  geom_line(data = central_park_df)
+```
 

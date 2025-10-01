@@ -128,3 +128,95 @@ weather_df %>%
     ## (`geom_point()`).
 
 ![](visualization_2_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+## Themes
+
+make my base plot.
+
+``` r
+ggplot_temp = 
+  weather_df %>% 
+  ggplot(aes(x = tmin, y=tmax)) +
+  geom_point(aes(color = name), alpha = 0.5) +
+  labs(
+    x = "Minimum daily temp",
+    y = "Maximum daily temp",
+    title = "Temp scatterplot",
+    caption = "Data from NOAA",
+    color = "Location"
+  ) +
+  scale_x_continuous(
+    breaks = c(-20, 0, 25),
+    labels = c("-20C", "0", "25")
+  ) +
+  viridis::scale_color_viridis(
+    discrete = TRUE
+  )
+```
+
+update my base plot note: order of code matters here
+
+``` r
+ggplot_temp +
+  theme_dark() +
+  theme(legend.position = "bottom") 
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](visualization_2_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+ggplot_temp +
+  theme_minimal() +
+  theme(legend.position = "bottom") 
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](visualization_2_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
+
+``` r
+ggplot_temp +
+  theme_bw() +
+  theme(legend.position = "bottom") 
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](visualization_2_files/figure-gfm/unnamed-chunk-8-3.png)<!-- -->
+
+``` r
+ggsave("weather_scatterplot.png", ggplot_temp)
+```
+
+    ## Saving 7 x 5 in image
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+## Adding data in geoms
+
+overlapping two different data sets
+
+``` r
+central_park_df = 
+  weather_df %>% 
+  filter(name == "CentralPark_NY")
+
+molokai_df =
+ weather_df %>% 
+  filter(name == "Molokai_HI")
+
+ggplot(data = molokai_df, aes(x = date, y = tmax, color = name)) +
+  geom_point() +
+  geom_line(data = central_park_df)
+```
+
+    ## Warning: Removed 1 row containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](visualization_2_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
