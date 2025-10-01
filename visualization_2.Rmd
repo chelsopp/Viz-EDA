@@ -1,14 +1,15 @@
 ---
-title: "visualization_1"
+title: "visualization_2"
 output: github_document
-date: "2025-09-25"
+date: "2025-09-30"
 ---
 
 ```{r}
 library(tidyverse)
-library(ggridges)
+library(patchwork)
 library(p8105.datasets)
 ```
+
 
 import the weather data
 
@@ -16,219 +17,83 @@ import the weather data
 data("weather_df")
 ```
 
-making our first plot
-
+let's make our basic scatterplot
+note: `labs` function to add descriptions to your plot
 ```{r}
-ggplot(weather_df, aes(x = tmin, y = tmax)) + 
-  geom_point()
+weather_df %>% 
+  ggplot(aes(x = tmin, y=tmax)) +
+  geom_point(aes(color = name), alpha = 0.5) +
+  labs(
+    x = "Minimum daily temp",
+    y = "Maximum daily temp",
+    title = "Temp scatterplot",
+    caption = "Data from NOAA",
+    color = "Location"
+  )
 ```
-another way to write code above, this time with pipes
+
+## Scales
 
 ```{r}
 weather_df %>% 
   ggplot(aes(x = tmin, y=tmax)) +
-  geom_point()
+  geom_point(aes(color = name), alpha = 0.5) +
+  labs(
+    x = "Minimum daily temp",
+    y = "Maximum daily temp",
+    title = "Temp scatterplot",
+    caption = "Data from NOAA",
+    color = "Location"
+  ) +
+  scale_x_continuous(
+    breaks = c(-20, 0, 25),
+    labels = c("-20C", "0", "25")
+  ) +
+  scale_y_continuous(
+    trans = "sqrt",
+    limits = c(10,30)
+  )
 ```
-the first code is just saving my scatterplot to the environment under a variable, the second part of the code 
-calls the variable and I can see it on my console.
 
+another way to zoom in to an area of your plot...
 ```{r}
-ggp_weather_scatterplot = 
-  weather_df %>% 
+weather_df %>%
+  filter(tmax > 10, tmax <30) %>% 
   ggplot(aes(x = tmin, y=tmax)) +
-  geom_point()
-
-ggp_weather_scatterplot
-```
-
-chekc that some rows are missing
-
-```{r}
-weather_df %>% 
-  filter(is.na(tmax))
-```
-
-## Fancier scatterplots
-
-`color = name` basically automatically picks a color for each `name` variable
-`geom_smooth` adds statistical info ontop of plot
-
-```{r}
-weather_df %>% 
-  ggplot(aes(x = tmin, y = tmax, color = name)) +
-  geom_point(alpha = 0.3) +
-  geom_smooth(se = FALSE)
-```
-
-where you define aethetics can matter - i also define aesthestics down in `geom_point`
-using size in `aes`, you can use another variable to determine the size
-```{r}
-weather_df %>% 
-  ggplot(aes(x = tmin, y = tmax)) +
-  geom_point(aes(color = name, size = prcp), alpha = 0.3) +
-  geom_smooth(se = FALSE)
-```
-
-use faceting real quick aka separating scatterplot into there separate plots by name
-`~ .`means row ~ column, e.g. `name ~ .` means put rows in mean, then leave column blank
-
-```{r}
-weather_df %>% 
-  ggplot(aes(x = tmin, y = tmax)) +
-  geom_point(aes(color = name), alpha = 0.3, size = 0.8) +
-  geom_smooth(se = FALSE) +
-  facet_grid(. ~ name)
-
-weather_df %>% 
-  ggplot(aes(x = tmin, y = tmax)) +
-  geom_point(aes(color = name), alpha = 0.3, size = 0.8) +
-  geom_smooth(se = FALSE) +
-  facet_grid(name ~ .)
-```
-
-let's make a smewhat more interesting scatterplot
-
-```{r}
-weather_df %>% 
-  ggplot(aes(x = tmin, y = tmax, color = name, shape = name)) +
-  geom_point(aes(size = prcp), alpha = 0.3) +
-  geom_smooth(se = FALSE) +
-  facet_grid(. ~ name)
-```
-
-LA #1
-
-```{r}
-weather_df %>% 
-  filter(name == "CentralPark_NY") %>% 
-  mutate(
-    tmax_fahr = tmax * (9/5) + 32,
-    tmin_fahr = tmin * (9/5) + 32
-  ) %>% 
-  ggplot(aes(x = tmin_fahr, y = tmax_fahr)) +
-  geom_point() +
-  geom_smooth(se = FALSE, method = "lm")
-```
-
-## Small things
-
-```{r}
-weather_df %>% 
-  ggplot(aes(x = tmin, y = tmax, color = name, shape = name)) +
- # geom_point(alpha = 0.3) +
-  geom_smooth(se = FALSE) 
-```
-
-the order of the code, will determine the order of how your plot looks
-```{r}
-weather_df %>% 
-  ggplot(aes(x = tmin, y = tmax, color = name, shape = name)) +
-  geom_smooth(se = FALSE) +
-   geom_point()
+  geom_point(aes(color = name), alpha = 0.5) +
+  labs(
+    x = "Minimum daily temp",
+    y = "Maximum daily temp",
+    title = "Temp scatterplot",
+    caption = "Data from NOAA",
+    color = "Location"
+  ) +
+  scale_x_continuous(
+    breaks = c(-20, 0, 25),
+    labels = c("-20C", "0", "25")
+  )  
 ```
 
 ```{r}
 weather_df %>% 
-  ggplot(aes(x = tmin, y = tmax)) +
-  geom_hex()
-```
-
-```{r}
-weather_df %>% 
-  ggplot(aes(x = tmin, y = tmax)) +
-  geom_point(color = "purple")
-```
-## Types of univariate plots
-
-```{r}
-weather_df %>% 
-  ggplot(aes(x = tmin)) +
-  geom_histogram(color = "white", fill = "red")
-```
-
-```{r}
-weather_df %>% 
-  ggplot(aes(x = tmin, color = name)) +
-  geom_histogram()
-
-weather_df %>% 
-  ggplot(aes(x = tmin, fill = name)) +
-  geom_histogram()
-```
-
-how to fix this? maybe with a facet?
-
-```{r}
-weather_df %>% 
-  ggplot(aes(x = tmin, fill = name)) +
-  geom_histogram() +
-  facet_grid (name ~ .)
-```
-
-density plot?
-
-```{r}
-weather_df %>% 
-  ggplot(aes(x = tmin, fill = name)) +
-  geom_density(alpha = 0.2) 
-```
-
-```{r}
-weather_df %>% 
-  ggplot(aes(x = name, y = tmin)) +
-  geom_boxplot(aes(fill = name)) 
+  ggplot(aes(x = tmin, y=tmax)) +
+  geom_point(aes(color = name), alpha = 0.5) +
+  labs(
+    x = "Minimum daily temp",
+    y = "Maximum daily temp",
+    title = "Temp scatterplot",
+    caption = "Data from NOAA",
+    color = "Location"
+  ) +
+  scale_x_continuous(
+    breaks = c(-20, 0, 25),
+    labels = c("-20C", "0", "25")
+  ) +
+  viridis::scale_color_viridis(
+    discrete = TRUE
+  )
 ```
 
 
-violing plots
-
-```{r}
-weather_df %>% 
-  ggplot(aes(x = name, y = tmin)) +
-  geom_violin(aes(fill = name))
-```
-
-ridge plot
-
-```{r}
-weather_df %>% 
-  ggplot(aes(x = tmin, y = name)) +
-  geom_density_ridges(aes(fill = name))
-```
-
-LA #2
-
-```{r}
-weather_df %>% 
-  ggplot(aes(x = prcp, fill = name)) +
-  geom_histogram() +
-  facet_grid(name ~ .)
-
-weather_df %>% 
-  ggplot(aes(x = prcp, fill = name)) +
-  geom_histogram() +
-  facet_grid(name ~ .)
-```
 
 
-## Saving and embedding plots
-
-saving plots
-
-```{r}
-ggp_weather_histogram = 
-  weather_df %>% 
-  ggplot(aes(x = prcp, fill = name)) +
-  geom_histogram() +
-  facet_grid(name ~ .)
-
-ggp_weather_histogram
-
-ggsave("plots/histogram_plot.pdf", ggp_weather_histogram, width = 8, height = 6)
-```
-embedding plots
-
-```{r, fig.width = 6, fig_height = 4}
-
-ggp_weather_histogram
-```
