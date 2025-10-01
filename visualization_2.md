@@ -220,3 +220,188 @@ ggplot(data = molokai_df, aes(x = date, y = tmax, color = name)) +
     ## (`geom_point()`).
 
 ![](visualization_2_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+## `pathwork`
+
+making three plots and combining them (aka putting them side by side)
+using `patchwork`
+
+``` r
+ggplot_tmax_tmin =
+  weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = 0.5) +
+  theme(legend.position = "none")
+
+ggplot_prec_density =
+  weather_df %>% 
+  filter(prcp > 0) %>% 
+  ggplot(aes(x = prcp, fill = name)) +
+  geom_density(alpha = 0.5) +
+  theme(legend.position = "none")
+
+ggplot_temp_season =
+  weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) +
+  geom_point(alpha = 0.5) + 
+  geom_smooth(se = FALSE) +
+  theme(legend.position = "bottom")
+
+(ggplot_tmax_tmin + ggplot_prec_density) / ggplot_temp_season
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+    ## Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](visualization_2_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+## Data manipulation
+
+let’s make temp. violin plots. note: using
+`mutate(name = fct_relevel(name, c("Molokai_HI", "CentralPark_NY", "Waterhole, WA")))`
+I’m putting Molokai_HI 1st, CentralPark_NY 2nd, and Waterhole, WA 3rd
+
+``` r
+weather_df %>% 
+  mutate(name = fct_relevel(name, c("Molokai_HI", "CentralPark_NY", "Waterhole, WA"))) %>% 
+  ggplot(aes(x = name, y = tmax, fill = name)) +
+  geom_violin(alpha = 0.5)
+```
+
+    ## Warning: There was 1 warning in `mutate()`.
+    ## ℹ In argument: `name = fct_relevel(name, c("Molokai_HI", "CentralPark_NY",
+    ##   "Waterhole, WA"))`.
+    ## Caused by warning:
+    ## ! 1 unknown level in `f`: Waterhole, WA
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_ydensity()`).
+
+![](visualization_2_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+another way to do this
+
+``` r
+weather_df %>% 
+  mutate(name = fct_reorder(name, tmax)) %>% 
+  ggplot(aes(x = name, y = tmax, fill = name)) +
+  geom_violin(alpha = 0.5)
+```
+
+    ## Warning: There was 1 warning in `mutate()`.
+    ## ℹ In argument: `name = fct_reorder(name, tmax)`.
+    ## Caused by warning:
+    ## ! `fct_reorder()` removing 17 missing values.
+    ## ℹ Use `.na_rm = TRUE` to silence this message.
+    ## ℹ Use `.na_rm = FALSE` to preserve NAs.
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_ydensity()`).
+
+![](visualization_2_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+what about data tidiness??
+
+note: `mutate(vist = fct_inorder(visit))` = what order does it appear in
+the first dataset we started with
+
+``` r
+pulse_df = 
+  haven::read_sas("data/public_pulse_data.sas7bdat") %>% 
+  janitor:: clean_names() %>% 
+  pivot_longer(
+    cols = bdi_score_bl:bdi_score_12m,
+    names_to = "visit",
+    names_prefix = "bdi_score_",
+    values_to = "bdi"
+  ) %>% 
+  mutate(vist = fct_inorder(visit))
+
+pulse_df %>% 
+  ggplot(aes(x = visit, y = bdi)) +
+  geom_boxplot()
+```
+
+    ## Warning: Removed 879 rows containing non-finite outside the scale range
+    ## (`stat_boxplot()`).
+
+![](visualization_2_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+Make a plot for the FAS study.
+
+``` r
+pups_df = 
+  read_csv("data/FAS_pups.csv", na = c("NA", ".", ""), skip = 3) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    sex = case_match(
+      sex,
+      1 ~ "male",
+      2 ~ "female"
+    )
+  )
+```
+
+    ## Rows: 313 Columns: 6
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): Litter Number
+    ## dbl (5): Sex, PD ears, PD eyes, PD pivot, PD walk
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+litters_df =
+  read_csv("data/FAS_litters.csv", na = c("NA", ".", "")) %>% 
+  janitor::clean_names() %>%  
+  separate(group, into = c("dose", "tx_day", sep = 3))
+```
+
+    ## Rows: 49 Columns: 8
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (2): Group, Litter Number
+    ## dbl (6): GD0 weight, GD18 weight, GD of Birth, Pups born alive, Pups dead @ ...
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+    ## Warning: Expected 3 pieces. Missing pieces filled with `NA` in 49 rows [1, 2, 3, 4, 5,
+    ## 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, ...].
+
+``` r
+fas_df = 
+  left_join(pups_df, litters_df, by = "litter_number")
+
+fas_df %>% 
+  select(pd_ears:tx_day) %>% 
+  pivot_longer(
+    cols = pd_ears:pd_walk,
+    names_to = "outcome",
+    names_prefix = "pd_",
+    values_to = "pn_day") %>% 
+  mutate(outocme = fct_reorder(outcome, pn_day)) %>%
+  ggplot(aes(x = dose, y = pn_day)) +
+  geom_violin() +
+  facet_grid(tx_day ~ outcome)
+```
+
+    ## Warning: There was 1 warning in `mutate()`.
+    ## ℹ In argument: `outocme = fct_reorder(outcome, pn_day)`.
+    ## Caused by warning:
+    ## ! `fct_reorder()` removing 44 missing values.
+    ## ℹ Use `.na_rm = TRUE` to silence this message.
+    ## ℹ Use `.na_rm = FALSE` to preserve NAs.
+
+    ## Warning: Removed 44 rows containing non-finite outside the scale range
+    ## (`stat_ydensity()`).
+
+![](visualization_2_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
