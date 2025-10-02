@@ -50,7 +50,7 @@ look at data again
 ```{r}
 weather_df %>% 
   filter(tmax >= 20, tmax <= 30) %>% 
-  ggplot(aes(x = tmin, y = tmax), color = name, shape = name) +
+  ggplot(aes(x = tmin, y = tmax, color = name, shape = name)) +
   geom_point()
 ```
 
@@ -100,5 +100,32 @@ weather_df %>%
     median_min = median(tmin, na.rm = TRUE),
     sd_prcp = sd(prcp, na.rm = TRUE)
   )
+```
+
+This is still a dataframe
+note: ` group_by(name, month)` = there are 24 months and 3 names and each distinct combination of those will be a group
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  ) %>% 
+  ggplot(aes(x = month, y = mean_tmax, color = name)) +
+  geom_point() +
+  geom_line()
+```
+
+sometimes format results more nicely
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  ) %>% 
+  pivot_wider(
+    names_from = name,
+    values_from = mean_tmax
+  ) %>% 
+  knitr::kable(digits = 2)
 ```
 
